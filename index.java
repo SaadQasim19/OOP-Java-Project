@@ -1,6 +1,15 @@
+
 import java.util.*;
 
-class Person {
+interface Registrable {
+    boolean register();
+}
+
+interface Voteable {
+    boolean canVote();
+}
+
+abstract class Person {
     String name, nationality;
     int age;
 
@@ -9,9 +18,12 @@ class Person {
         this.age = age;
         this.nationality = nationality;
     }
+
+    // Abstract method to force subclasses to provide eligibility logic if needed
+    abstract boolean isEligible();
 }
 
-class Candidate extends Person {
+class Candidate extends Person implements Registrable, Voteable {
     boolean hasDualNationality, isAhmadi, hasDeclaredAssets;
     PoliticalParty party;
 
@@ -23,14 +35,25 @@ class Candidate extends Person {
         this.party = party;
     }
 
+    @Override
     boolean isEligible() {
         boolean ageValid = age >= 25 && age <= 40;
         boolean nationalityValid = nationality.equalsIgnoreCase("pakistani");
         return ageValid && nationalityValid && !hasDualNationality && !isAhmadi && hasDeclaredAssets;
     }
+
+    @Override
+    public boolean register() {
+        return isEligible();
+    }
+
+    @Override
+    public boolean canVote() {
+        return isEligible();
+    }
 }
 
-class Voter extends Person {
+class Voter extends Person implements Registrable {
     boolean isMentallyStable;
     PollingStation station;
 
@@ -40,7 +63,17 @@ class Voter extends Person {
         this.station = station;
     }
 
-    boolean canVote() {
+    @Override
+    boolean isEligible() {
+        return canVote();
+    }
+
+    @Override
+    public boolean register() {
+        return canVote();
+    }
+
+    public boolean canVote() {
         return age >= 18 && age <= 60 && isMentallyStable;
     }
 }
@@ -106,7 +139,7 @@ class ResultDisplay {
             }
             Candidate c = candidates.get(maxIndex);
             System.out.println((i + 1) + ". " + c.name + " (" + c.party.name + ") - " + votes[maxIndex] + " votes");
-            votes[maxIndex] = -1; // mark as processed
+            votes[maxIndex] = -1; 
         }
     }
 }
@@ -154,7 +187,7 @@ public class index {
             Candidate c = new Candidate(name, age, nationality, dualNat, isAhmadi, assets, party);
             allCandidates.add(c);
 
-            if (c.isEligible()) {
+            if (c.register()) {
                 System.out.println(name + " is registered.");
             } else {
                 System.out.println(name + " is not eligible.");
@@ -183,7 +216,7 @@ public class index {
             Voter v = new Voter(name, age, nat, stable, assignedStation);
             allVoters.add(v);
 
-            if (v.canVote()) {
+            if (v.register()) {
                 System.out.println(name + " is registered at " + assignedStation.location);
             } else {
                 System.out.println(name + " is not eligible.");
