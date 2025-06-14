@@ -1,11 +1,11 @@
 package GUI;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-import java.io.*;
 
-// ===== Abstract Person class =====
+//* ===== Abstract Person class =====
 abstract class Person {
     String name, nationality;
     int age;
@@ -19,7 +19,7 @@ abstract class Person {
     abstract boolean isEligible();
 }
 
-// ===== Candidate class =====
+//* ===== Candidate class =====
 class Candidate extends Person {
     boolean hasDualNationality, isAhmadi, hasDeclaredAssets;
     PoliticalParty party;
@@ -42,7 +42,7 @@ class Candidate extends Person {
     }
 }
 
-// ===== Voter class =====
+//* ===== Voter class =====
 class Voter extends Person {
     boolean isMentallyStable;
     PollingStation station;
@@ -55,19 +55,15 @@ class Voter extends Person {
 
     @Override
     boolean isEligible() {
-        return canVote();
+        return age >= 18 && age <= 60 && isMentallyStable;
     }
 
     public boolean register() {
-        return canVote();
-    }
-
-    public boolean canVote() {
-        return age >= 18 && age <= 60 && isMentallyStable;
+        return isEligible();
     }
 }
 
-// ===== PoliticalParty class =====
+//* ===== PoliticalParty class =====
 class PoliticalParty {
     String name, symbol;
 
@@ -77,7 +73,7 @@ class PoliticalParty {
     }
 }
 
-// ===== PollingStation class =====
+//* ===== PollingStation class =====
 class PollingStation {
     int stationNumber;
     String location;
@@ -88,21 +84,7 @@ class PollingStation {
     }
 }
 
-// ===== Complaint class =====
-class Complaint {
-    String name, issue;
-
-    Complaint(String name, String issue) {
-        this.name = name;
-        this.issue = issue;
-    }
-
-    void showComplaint() {
-        System.out.println("Complaint from " + name + ": " + issue);
-    }
-}
-
-// ===== ResultDisplay class =====
+//* ===== ResultDisplay class =====
 class ResultDisplay {
     ArrayList<Candidate> candidates;
     int[] votes;
@@ -110,20 +92,6 @@ class ResultDisplay {
     ResultDisplay(ArrayList<Candidate> candidates, int[] votes) {
         this.candidates = candidates;
         this.votes = votes;
-    }
-
-    public void displayResultsConsole() {
-        System.out.println("\nElection Results:");
-        int[] copy = votes.clone();
-        for (int i = 0; i < candidates.size(); i++) {
-            int maxIndex = 0;
-            for (int j = 0; j < copy.length; j++) {
-                if (copy[j] > copy[maxIndex]) maxIndex = j;
-            }
-            Candidate c = candidates.get(maxIndex);
-            System.out.println((i + 1) + ". " + c.name + " (" + c.party.name + ") - " + copy[maxIndex] + " votes");
-            copy[maxIndex] = -1;
-        }
     }
 
     public String getResultsText() {
@@ -140,17 +108,9 @@ class ResultDisplay {
         }
         return sb.toString();
     }
-
-    public void saveResultsToFile(String filename) {
-        try (FileWriter fw = new FileWriter(filename)) {
-            fw.write(getResultsText());
-        } catch (IOException e) {
-            System.out.println("Error saving results: " + e.getMessage());
-        }
-    }
 }
 
-// ===== ElectionCommission class =====
+//* ===== ElectionCommission class =====
 class ElectionCommission {
     String head, electionType;
 
@@ -160,45 +120,55 @@ class ElectionCommission {
     }
 
     void showDetails() {
+        System.out.println("==== Welcome to Election Management System ====");
         System.out.println("Election Type: " + electionType);
         System.out.println("Election Head: " + head);
     }
 }
 
-// ===== Main GUI Class =====
+//* ===== Main GUI Class =====
 public class ElectionGUI extends JFrame {
     ArrayList<Candidate> candidates = new ArrayList<>();
     ArrayList<Voter> voters = new ArrayList<>();
     int[] votes;
-
+    PoliticalParty partyA = new PoliticalParty("Party A", "Star");
     JTextArea resultArea;
+    String electionType;
 
-    ElectionGUI() {
+    ElectionGUI(String type) {
+        this.electionType = type;
+        ElectionCommission ec = new ElectionCommission("Election Commission Of Pakistan", electionType);
+        ec.showDetails();
+
         setTitle("Election Management System");
-        setSize(600, 500);
+        setSize(650, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        ElectionCommission ec = new ElectionCommission("Election Commission Of Pakistan", "National");
-        ec.showDetails();
+       
 
         JPanel panel = new JPanel();
         JButton regCand = new JButton("Register Candidate");
+        JButton dropCand = new JButton("Drop Candidate");
         JButton regVoter = new JButton("Register Voter");
         JButton startVote = new JButton("Start Voting");
         JButton results = new JButton("Show Results");
 
         panel.add(regCand);
+        panel.add(dropCand);
         panel.add(regVoter);
         panel.add(startVote);
         panel.add(results);
 
         resultArea = new JTextArea(15, 50);
+        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         add(new JScrollPane(resultArea), BorderLayout.CENTER);
         add(panel, BorderLayout.SOUTH);
 
+        //* ===== Button Actions =====
         regCand.addActionListener(e -> registerCandidate());
         regVoter.addActionListener(e -> registerVoter());
+        dropCand.addActionListener(e -> dropCandidate());
         startVote.addActionListener(e -> vote());
         results.addActionListener(e -> displayResults());
 
@@ -206,37 +176,55 @@ public class ElectionGUI extends JFrame {
     }
 
     void registerCandidate() {
-        String name = JOptionPane.showInputDialog("Candidate Name:");
-        int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
-        String nationality = JOptionPane.showInputDialog("Nationality:");
-        boolean dual = JOptionPane.showConfirmDialog(null, "Dual Nationality?", "Info", JOptionPane.YES_NO_OPTION) == 0;
-        boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?", "Info", JOptionPane.YES_NO_OPTION) == 0;
-        boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+        try {
+            String name = JOptionPane.showInputDialog("Candidate Name:");
+            int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
+            String nationality = JOptionPane.showInputDialog("Nationality:");
+            boolean dual = JOptionPane.showConfirmDialog(null, "Dual Nationality?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+            boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+            boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?", "Info", JOptionPane.YES_NO_OPTION) == 0;
 
-        PoliticalParty party = new PoliticalParty("Party A", "Star"); // for simplicity
-        Candidate c = new Candidate(name, age, nationality, dual, ahmadi, assets, party);
-        if (c.register()) {
-            candidates.add(c);
-            JOptionPane.showMessageDialog(null, "Candidate Registered.");
-        } else {
-            JOptionPane.showMessageDialog(null, "Not Eligible.");
+            Candidate c = new Candidate(name, age, nationality, dual, ahmadi, assets, partyA);
+            if (c.register()) {
+                candidates.add(c);
+                JOptionPane.showMessageDialog(null, "Candidate Registered.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Not Eligible.");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid Input.");
         }
     }
 
     void registerVoter() {
-        String name = JOptionPane.showInputDialog("Voter Name:");
-        int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
-        String nationality = JOptionPane.showInputDialog("Nationality:");
-        boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+        try {
+            String name = JOptionPane.showInputDialog("Voter Name:");
+            int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
+            String nationality = JOptionPane.showInputDialog("Nationality:");
+            boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?", "Info", JOptionPane.YES_NO_OPTION) == 0;
 
-        PollingStation ps = new PollingStation(1, "Station A");
-        Voter v = new Voter(name, age, nationality, stable, ps);
-        if (v.register()) {
-            voters.add(v);
-            JOptionPane.showMessageDialog(null, "Voter Registered.");
-        } else {
-            JOptionPane.showMessageDialog(null, "Not Eligible.");
+            PollingStation ps = new PollingStation(1, "Station A");
+            Voter v = new Voter(name, age, nationality, stable, ps);
+            if (v.register()) {
+                voters.add(v);
+                JOptionPane.showMessageDialog(null, "Voter Registered.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Not Eligible.");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid Input.");
         }
+    }
+
+    void dropCandidate() {
+        if (candidates.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No candidates to drop.");
+            return;
+        }
+        String[] candNames = candidates.stream().map(c -> c.name).toArray(String[]::new);
+        String selected = (String) JOptionPane.showInputDialog(null, "Select candidate to drop:", "Drop Candidate", JOptionPane.PLAIN_MESSAGE, null, candNames, candNames[0]);
+        candidates.removeIf(c -> c.name.equals(selected));
+        JOptionPane.showMessageDialog(null, "Candidate dropped from party.");
     }
 
     void vote() {
@@ -247,8 +235,7 @@ public class ElectionGUI extends JFrame {
         votes = new int[candidates.size()];
         for (Voter v : voters) {
             String[] names = candidates.stream().map(c -> c.name).toArray(String[]::new);
-            int choice = JOptionPane.showOptionDialog(null, v.name + ", cast your vote:", "Voting",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
+            int choice = JOptionPane.showOptionDialog(null, v.name + ", cast your vote:", "Voting", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
             if (choice >= 0) {
                 votes[choice]++;
             }
@@ -256,13 +243,20 @@ public class ElectionGUI extends JFrame {
     }
 
     void displayResults() {
+        if (votes == null) {
+            JOptionPane.showMessageDialog(null, "No votes recorded yet.");
+            return;
+        }
         ResultDisplay rd = new ResultDisplay(candidates, votes);
-        rd.displayResultsConsole();
         resultArea.setText(rd.getResultsText());
-        rd.saveResultsToFile("Results.txt");
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(ElectionGUI::new);
+
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Press Enter to select Election Type: ");
+        String type = sc.nextLine();
+
+        SwingUtilities.invokeLater(() -> new ElectionGUI(type));
     }
 }
