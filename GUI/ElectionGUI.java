@@ -1,5 +1,6 @@
 package GUI;
 
+//* Import necessary packages
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
