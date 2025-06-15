@@ -157,9 +157,19 @@ public class ElectionGUI extends JFrame {
         ec.showDetails();
 
         setTitle("Election Management System");
-        setSize(650, 550);
+        setSize(700, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+//*  Create a title label
+JLabel titleLabel = new JLabel("Election Management System - " + electionType, SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        add(titleLabel, BorderLayout.NORTH);
+        setLocationRelativeTo(null);
+        setResizable(false);
+        titleLabel.setForeground(Color.BLUE);
+titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
 
         JPanel panel = new JPanel();
         JButton regCand = new JButton("Register Candidate");
@@ -232,8 +242,17 @@ public class ElectionGUI extends JFrame {
             String nationality = JOptionPane.showInputDialog("Nationality:");
             boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?", "Info", JOptionPane.YES_NO_OPTION) == 0;
 
-            PollingStation ps = new PollingStation(1, "Station A");
+            String[] stations = {"Station A", "Station B", "Station C"};
+            String selectedStation = (String) JOptionPane.showInputDialog(null, "Select Polling Station:", "Polling Station", JOptionPane.PLAIN_MESSAGE, null, stations, stations[0]);
+
+            if (selectedStation == null) {
+                JOptionPane.showMessageDialog(null, "No polling station selected.");
+                return;
+            }
+
+            PollingStation ps = new PollingStation(new Random().nextInt(1000), selectedStation);
             Voter v = new Voter(name, age, nationality, stable, ps);
+
             if (v.register()) {
                 voters.add(v);
                 saveToFile("voters.txt", v.toFileString());
@@ -269,6 +288,13 @@ public class ElectionGUI extends JFrame {
             if (choice >= 0) {
                 votes[choice]++;
             }
+
+            int comp = JOptionPane.showConfirmDialog(null, "Do you want to file a complaint?", "Complaint", JOptionPane.YES_NO_OPTION);
+            if (comp == JOptionPane.YES_OPTION) {
+                String complaint = JOptionPane.showInputDialog("Enter your complaint:");
+                saveToFile("complaints.txt", "From: " + v.name + " | Polling Station: " + v.station.location + " | Complaint: " + complaint);
+                JOptionPane.showMessageDialog(null, "Your complaint has been recorded.");
+            }
         }
     }
 
@@ -291,7 +317,7 @@ public class ElectionGUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        String[] types = { "National", "Provincial" };
+        String[] types = {"National", "Provincial"};
         String type = (String) JOptionPane.showInputDialog(null, "Select Election Type:", "Election Setup", JOptionPane.PLAIN_MESSAGE, null, types, types[0]);
         if (type != null) {
             SwingUtilities.invokeLater(() -> new ElectionGUI(type));

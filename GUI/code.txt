@@ -273,3 +273,6 @@ public class ElectionGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new ElectionGUI(type));
     }
 }
+
+
+-------------------------------------------------------------
