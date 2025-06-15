@@ -1,9 +1,9 @@
 package GUI;
 
+//* Import necessary packages
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
 
 //* ===== Abstract Person class =====
@@ -41,10 +41,6 @@ class Candidate extends Person {
     public boolean register() {
         return isEligible();
     }
-
-    public String toFileString() {
-        return name + "," + age + "," + nationality + "," + party.name;
-    }
 }
 
 //* ===== Voter class =====
@@ -65,10 +61,6 @@ class Voter extends Person {
 
     public boolean register() {
         return isEligible();
-    }
-
-    public String toFileString() {
-        return name + "," + age + "," + nationality + "," + station.location;
     }
 }
 
@@ -117,14 +109,6 @@ class ResultDisplay {
         }
         return sb.toString();
     }
-
-    public void saveToFile(String filePath) {
-        try (FileWriter fw = new FileWriter(filePath, true)) {
-            fw.write(getResultsText() + "\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
 //* ===== ElectionCommission class =====
@@ -148,6 +132,7 @@ public class ElectionGUI extends JFrame {
     ArrayList<Candidate> candidates = new ArrayList<>();
     ArrayList<Voter> voters = new ArrayList<>();
     int[] votes;
+    PoliticalParty partyA = new PoliticalParty("Party A", "Star");
     JTextArea resultArea;
     String electionType;
 
@@ -160,6 +145,8 @@ public class ElectionGUI extends JFrame {
         setSize(650, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+       
 
         JPanel panel = new JPanel();
         JButton regCand = new JButton("Register Candidate");
@@ -179,6 +166,7 @@ public class ElectionGUI extends JFrame {
         add(new JScrollPane(resultArea), BorderLayout.CENTER);
         add(panel, BorderLayout.SOUTH);
 
+        //* ===== Button Actions =====
         regCand.addActionListener(e -> registerCandidate());
         regVoter.addActionListener(e -> registerVoter());
         dropCand.addActionListener(e -> dropCandidate());
@@ -198,24 +186,20 @@ public class ElectionGUI extends JFrame {
             if (dual) {
                 int drop = JOptionPane.showConfirmDialog(null, "Candidate has dual nationality.\nDo you agree to drop the second nationality to proceed?", "Dual Nationality", JOptionPane.YES_NO_OPTION);
                 if (drop == JOptionPane.YES_OPTION) {
-                    dual = false;
+                    dual = false; 
                 } else {
                     JOptionPane.showMessageDialog(null, "Candidate not registered due to dual nationality.");
-                    return;
+                    return; 
                 }
             }
+
 
             boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?", "Info", JOptionPane.YES_NO_OPTION) == 0;
             boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?", "Info", JOptionPane.YES_NO_OPTION) == 0;
 
-            String partyName = JOptionPane.showInputDialog("Enter Political Party Name:");
-            String symbol = JOptionPane.showInputDialog("Enter Party Symbol:");
-            PoliticalParty party = new PoliticalParty(partyName, symbol);
-
-            Candidate c = new Candidate(name, age, nationality, dual, ahmadi, assets, party);
+            Candidate c = new Candidate(name, age, nationality, dual, ahmadi, assets, partyA);
             if (c.register()) {
                 candidates.add(c);
-                saveToFile("candidates.txt", c.toFileString());
                 JOptionPane.showMessageDialog(null, "Candidate Registered.");
             } else {
                 JOptionPane.showMessageDialog(null, "Not Eligible.");
@@ -236,7 +220,6 @@ public class ElectionGUI extends JFrame {
             Voter v = new Voter(name, age, nationality, stable, ps);
             if (v.register()) {
                 voters.add(v);
-                saveToFile("voters.txt", v.toFileString());
                 JOptionPane.showMessageDialog(null, "Voter Registered.");
             } else {
                 JOptionPane.showMessageDialog(null, "Not Eligible.");
@@ -279,22 +262,14 @@ public class ElectionGUI extends JFrame {
         }
         ResultDisplay rd = new ResultDisplay(candidates, votes);
         resultArea.setText(rd.getResultsText());
-        rd.saveToFile("results.txt");
-    }
-
-    void saveToFile(String fileName, String content) {
-        try (FileWriter fw = new FileWriter(fileName, true)) {
-            fw.write(content + "\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {
-        String[] types = { "National", "Provincial" };
-        String type = (String) JOptionPane.showInputDialog(null, "Select Election Type:", "Election Setup", JOptionPane.PLAIN_MESSAGE, null, types, types[0]);
-        if (type != null) {
-            SwingUtilities.invokeLater(() -> new ElectionGUI(type));
-        }
+
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Press Enter to select Election Type: ");
+        String type = sc.nextLine();
+
+        SwingUtilities.invokeLater(() -> new ElectionGUI(type));
     }
 }
