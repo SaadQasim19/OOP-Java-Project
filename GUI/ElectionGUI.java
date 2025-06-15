@@ -6,7 +6,13 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
-//* ===== Abstract Person class =====
+//* ============ Interface for Registerable entities =============
+interface Registrable {
+    boolean register();
+    String toStoreStringFile();
+}
+
+// * ============ Abstract Person class =================
 abstract class Person {
     String name, nationality;
     int age;
@@ -20,8 +26,8 @@ abstract class Person {
     abstract boolean isEligible();
 }
 
-//* ===== Candidate class =====
-class Candidate extends Person {
+// * ================== Candidate class ====================
+class Candidate extends Person implements Registrable {
     boolean hasDualNationality, isAhmadi, hasDeclaredAssets;
     PoliticalParty party;
 
@@ -38,17 +44,19 @@ class Candidate extends Person {
         return age >= 25 && age <= 40 && nationality.equalsIgnoreCase("pakistani") && !isAhmadi && hasDeclaredAssets;
     }
 
+    @Override
     public boolean register() {
         return isEligible();
     }
 
-    public String toFileString() {
-        return name + "," + age + "," + nationality + "," + party.name;
+    @Override
+    public String toStoreStringFile() {
+        return "Name: " + name + "\n" + "Age: " + age + "\n" + "Nationality: " + nationality + "\n" + "Party: " + party.name;
     }
 }
 
-//* ===== Voter class =====
-class Voter extends Person {
+// * ===== Voter class =====
+class Voter extends Person implements Registrable {
     boolean isMentallyStable;
     PollingStation station;
 
@@ -63,16 +71,18 @@ class Voter extends Person {
         return age >= 18 && age <= 60 && isMentallyStable;
     }
 
+    @Override
     public boolean register() {
         return isEligible();
     }
 
-    public String toFileString() {
-        return name + "," + age + "," + nationality + "," + station.location;
+    @Override
+    public String toStoreStringFile() {
+        return "Name: " + name + "\n" + "Age: " + age + "\n" + "Nationality: " + nationality + "\n" + "Polling Station: " + station.location;
     }
 }
 
-//* ===== PoliticalParty class =====
+// * ===== PoliticalParty class =====
 class PoliticalParty {
     String name, symbol;
 
@@ -82,7 +92,7 @@ class PoliticalParty {
     }
 }
 
-//* ===== PollingStation class =====
+// * ===== PollingStation class =====
 class PollingStation {
     int stationNumber;
     String location;
@@ -93,7 +103,7 @@ class PollingStation {
     }
 }
 
-//* ===== ResultDisplay class =====
+// * ===== ResultDisplay class =====
 class ResultDisplay {
     ArrayList<Candidate> candidates;
     int[] votes;
@@ -104,18 +114,19 @@ class ResultDisplay {
     }
 
     public String getResultsText() {
-        StringBuilder sb = new StringBuilder("Election Results:\n");
+        String result = "Election Results:\n";
         int[] copy = votes.clone();
         for (int i = 0; i < candidates.size(); i++) {
             int maxIndex = 0;
             for (int j = 0; j < copy.length; j++) {
-                if (copy[j] > copy[maxIndex]) maxIndex = j;
+                if (copy[j] > copy[maxIndex])
+                    maxIndex = j;
             }
             Candidate c = candidates.get(maxIndex);
-            sb.append((i + 1)).append(". ").append(c.name).append(" (").append(c.party.name).append(") - ").append(copy[maxIndex]).append(" votes\n");
+            result += (i + 1) + ". " + c.name + " (" + c.party.name + ") - " + copy[maxIndex] + " votes\n";
             copy[maxIndex] = -1;
         }
-        return sb.toString();
+        return result;
     }
 
     public void saveToFile(String filePath) {
@@ -127,7 +138,7 @@ class ResultDisplay {
     }
 }
 
-//* ===== ElectionCommission class =====
+// * ===== ElectionCommission class =========
 class ElectionCommission {
     String head, electionType;
 
@@ -143,7 +154,8 @@ class ElectionCommission {
     }
 }
 
-//* ===== Main GUI Class =====
+// * ====================== Main GUI Class  ===========================
+
 public class ElectionGUI extends JFrame {
     ArrayList<Candidate> candidates = new ArrayList<>();
     ArrayList<Voter> voters = new ArrayList<>();
@@ -151,161 +163,199 @@ public class ElectionGUI extends JFrame {
     JTextArea resultArea;
     String electionType;
 
-    ElectionGUI(String type) {
-        this.electionType = type;
-        ElectionCommission ec = new ElectionCommission("Election Commission Of Pakistan", electionType);
-        ec.showDetails();
+    public ElectionGUI(String type) {
+        electionType = type;
 
         setTitle("Election Management System");
         setSize(700, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
-//*  Create a title label
-JLabel titleLabel = new JLabel("Election Management System - " + electionType, SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        add(titleLabel, BorderLayout.NORTH);
         setLocationRelativeTo(null);
         setResizable(false);
+
+        JLabel titleLabel = new JLabel("Election Management System - " + electionType, JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(Color.BLUE);
-titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        add(titleLabel, BorderLayout.NORTH);
 
+        JPanel buttonPanel = new JPanel();
 
-        JPanel panel = new JPanel();
-        JButton regCand = new JButton("Register Candidate");
-        JButton dropCand = new JButton("Drop Candidate");
-        JButton regVoter = new JButton("Register Voter");
-        JButton startVote = new JButton("Start Voting");
-        JButton results = new JButton("Show Results");
+        JButton btnRegCand = new JButton("Register Candidate");
+        btnRegCand.setBackground(new Color(52, 152, 219));
 
-        panel.add(regCand);
-        panel.add(dropCand);
-        panel.add(regVoter);
-        panel.add(startVote);
-        panel.add(results);
+        JButton btnDropCand = new JButton("Drop Candidate");
+        btnDropCand.setBackground(new Color(231, 76, 60));
+
+        JButton btnRegVoter = new JButton("Register Voter");
+        btnRegVoter.setBackground(new Color(52, 152, 219));
+
+        JButton btnVote = new JButton("Start Voting");
+        btnVote.setBackground(new Color(241, 196, 15));
+
+        JButton btnResult = new JButton("Show Results");
+        btnResult.setBackground(new Color(46, 204, 113));
+
+        buttonPanel.add(btnRegCand);
+        buttonPanel.add(btnDropCand);
+        buttonPanel.add(btnRegVoter);
+        buttonPanel.add(btnVote);
+        buttonPanel.add(btnResult);
+        add(buttonPanel, BorderLayout.SOUTH);
 
         resultArea = new JTextArea(15, 50);
-        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        resultArea.setFont(new Font("Calibri Light", Font.BOLD, 18));
         add(new JScrollPane(resultArea), BorderLayout.CENTER);
-        add(panel, BorderLayout.SOUTH);
 
-        regCand.addActionListener(e -> registerCandidate());
-        regVoter.addActionListener(e -> registerVoter());
-        dropCand.addActionListener(e -> dropCandidate());
-        startVote.addActionListener(e -> vote());
-        results.addActionListener(e -> displayResults());
+        btnRegCand.addActionListener(e -> registerCandidate());
+        btnDropCand.addActionListener(e -> dropCandidate());
+        btnRegVoter.addActionListener(e -> registerVoter());
+        btnVote.addActionListener(e -> vote());
+        btnResult.addActionListener(e -> displayResults());
 
         setVisible(true);
     }
 
-    void registerCandidate() {
+    public void registerCandidate() {
         try {
             String name = JOptionPane.showInputDialog("Candidate Name:");
             int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
             String nationality = JOptionPane.showInputDialog("Nationality:");
-            boolean dual = JOptionPane.showConfirmDialog(null, "Dual Nationality?", "Info", JOptionPane.YES_NO_OPTION) == 0;
 
-            if (dual) {
-                int drop = JOptionPane.showConfirmDialog(null, "Candidate has dual nationality.\nDo you agree to drop the second nationality to proceed?", "Dual Nationality", JOptionPane.YES_NO_OPTION);
-                if (drop == JOptionPane.YES_OPTION) {
-                    dual = false;
-                } else {
-                    JOptionPane.showMessageDialog(null, "Candidate not registered due to dual nationality.");
+            int dual = JOptionPane.showConfirmDialog(null, "Has Dual Nationality?");
+            if (dual == JOptionPane.YES_OPTION) {
+                int drop = JOptionPane.showConfirmDialog(null, "Drop second nationality?");
+                if (drop != JOptionPane.YES_OPTION) {
+                    JOptionPane.showMessageDialog(null, "Candidate not registered.");
                     return;
                 }
             }
 
-            boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?", "Info", JOptionPane.YES_NO_OPTION) == 0;
-            boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+            boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?") == 0;
+            boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?") == 0;
 
-            String partyName = JOptionPane.showInputDialog("Enter Political Party Name:");
-            String symbol = JOptionPane.showInputDialog("Enter Party Symbol:");
+            String partyName = JOptionPane.showInputDialog("Party Name:");
+            String symbol = JOptionPane.showInputDialog("Party Symbol:");
             PoliticalParty party = new PoliticalParty(partyName, symbol);
 
-            Candidate c = new Candidate(name, age, nationality, dual, ahmadi, assets, party);
+            Candidate c = new Candidate(name, age, nationality, false, ahmadi, assets, party);
             if (c.register()) {
                 candidates.add(c);
-                saveToFile("candidates.txt", c.toFileString());
+                saveToFile("candidates.txt", c.toStoreStringFile());
                 JOptionPane.showMessageDialog(null, "Candidate Registered.");
             } else {
                 JOptionPane.showMessageDialog(null, "Not Eligible.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Invalid Input.");
+            JOptionPane.showMessageDialog(null, "Invalid input.");
         }
     }
 
-    void registerVoter() {
+    public void dropCandidate() {
+        if (candidates.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No candidates.");
+            return;
+        }
+
+        String[] candList = new String[candidates.size()];
+        for (int i = 0; i < candidates.size(); i++) {
+            candList[i] = candidates.get(i).name;
+        }
+
+        String selected = (String) JOptionPane.showInputDialog(null, "Select to drop:", "Drop",
+                JOptionPane.PLAIN_MESSAGE, null, candList, candList[0]);
+
+        if (selected != null) {
+            for (int i = 0; i < candidates.size(); i++) {
+                if (candidates.get(i).name.equals(selected)) {
+                    candidates.remove(i);
+                    JOptionPane.showMessageDialog(null, "Candidate Dropped.");
+                    break;
+                }
+            }
+        }
+    }
+
+    public void registerVoter() {
         try {
             String name = JOptionPane.showInputDialog("Voter Name:");
             int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
             String nationality = JOptionPane.showInputDialog("Nationality:");
-            boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?", "Info", JOptionPane.YES_NO_OPTION) == 0;
+            boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?") == 0;
 
-            String[] stations = {"Station A", "Station B", "Station C"};
-            String selectedStation = (String) JOptionPane.showInputDialog(null, "Select Polling Station:", "Polling Station", JOptionPane.PLAIN_MESSAGE, null, stations, stations[0]);
+            String[] stations = { "Station A", "Station B", "Station C" };
+            String station = (String) JOptionPane.showInputDialog(null, "Polling Station:", "Select",
+                    JOptionPane.PLAIN_MESSAGE, null, stations, stations[0]);
 
-            if (selectedStation == null) {
-                JOptionPane.showMessageDialog(null, "No polling station selected.");
-                return;
-            }
-
-            PollingStation ps = new PollingStation(new Random().nextInt(1000), selectedStation);
+            PollingStation ps = new PollingStation(new Random().nextInt(1000), station);
             Voter v = new Voter(name, age, nationality, stable, ps);
 
             if (v.register()) {
                 voters.add(v);
-                saveToFile("voters.txt", v.toFileString());
+                saveToFile("voters.txt", v.toStoreStringFile());
                 JOptionPane.showMessageDialog(null, "Voter Registered.");
             } else {
                 JOptionPane.showMessageDialog(null, "Not Eligible.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Invalid Input.");
+            JOptionPane.showMessageDialog(null, "Invalid input.");
         }
     }
 
-    void dropCandidate() {
-        if (candidates.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No candidates to drop.");
+    public void vote() {
+        if (candidates.size() == 0 || voters.size() == 0) {
+            JOptionPane.showMessageDialog(null, "Need candidates and voters.");
             return;
         }
-        String[] candNames = candidates.stream().map(c -> c.name).toArray(String[]::new);
-        String selected = (String) JOptionPane.showInputDialog(null, "Select candidate to drop:", "Drop Candidate", JOptionPane.PLAIN_MESSAGE, null, candNames, candNames[0]);
-        candidates.removeIf(c -> c.name.equals(selected));
-        JOptionPane.showMessageDialog(null, "Candidate dropped from party.");
-    }
 
-    void vote() {
-        if (candidates.isEmpty() || voters.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Need at least one candidate and voter.");
-            return;
-        }
         votes = new int[candidates.size()];
-        for (Voter v : voters) {
-            String[] names = candidates.stream().map(c -> c.name).toArray(String[]::new);
-            int choice = JOptionPane.showOptionDialog(null, v.name + ", cast your vote:", "Voting", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
+        for (int i = 0; i < voters.size(); i++) {
+            Voter v = voters.get(i);
+            String[] candList = new String[candidates.size()];
+            for (int j = 0; j < candidates.size(); j++) {
+                candList[j] = candidates.get(j).name;
+            }
+
+            int choice = JOptionPane.showOptionDialog(null, v.name + ", cast your vote:", "Vote",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, candList, candList[0]);
+
             if (choice >= 0) {
                 votes[choice]++;
             }
 
-            int comp = JOptionPane.showConfirmDialog(null, "Do you want to file a complaint?", "Complaint", JOptionPane.YES_NO_OPTION);
-            if (comp == JOptionPane.YES_OPTION) {
-                String complaint = JOptionPane.showInputDialog("Enter your complaint:");
-                saveToFile("complaints.txt", "From: " + v.name + " | Polling Station: " + v.station.location + " | Complaint: " + complaint);
-                JOptionPane.showMessageDialog(null, "Your complaint has been recorded.");
+            int complaint = JOptionPane.showConfirmDialog(null, "Want to file a complaint?");
+            if (complaint == JOptionPane.YES_OPTION) {
+                String text = JOptionPane.showInputDialog("Enter complaint:");
+                saveToFile("complaints.txt", "From: " + v.name + " | Station: " + v.station.location + " | " + text);
+                JOptionPane.showMessageDialog(null, "Complaint recorded.");
             }
         }
     }
 
-    void displayResults() {
+    public void displayResults() {
         if (votes == null) {
-            JOptionPane.showMessageDialog(null, "No votes recorded yet.");
+            JOptionPane.showMessageDialog(null, "No votes yet.");
             return;
         }
-        ResultDisplay rd = new ResultDisplay(candidates, votes);
-        resultArea.setText(rd.getResultsText());
-        rd.saveToFile("results.txt");
+
+        String result = "----- ELECTION RESULTS -----\n";
+
+        int maxVotes = -1;
+        String winner = "";
+
+        for (int i = 0; i < candidates.size(); i++) {
+            Candidate c = candidates.get(i);
+            result += c.name + " (" + c.party.name + ") - " + votes[i] + " votes\n";
+
+            if (votes[i] > maxVotes) {
+                maxVotes = votes[i];
+                winner = c.name;
+            }
+        }
+
+        result += "\nWinner: " + winner + " with " + maxVotes + " votes.";
+        resultArea.setText(result);
+        saveToFile("results.txt", result);
     }
 
     void saveToFile(String fileName, String content) {
@@ -317,10 +367,11 @@ titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
     }
 
     public static void main(String[] args) {
-        String[] types = {"National", "Provincial"};
-        String type = (String) JOptionPane.showInputDialog(null, "Select Election Type:", "Election Setup", JOptionPane.PLAIN_MESSAGE, null, types, types[0]);
+        String[] types = { "National", "Provincial" };
+        String type = (String) JOptionPane.showInputDialog(null, "Select Election Type:", "Setup",
+                JOptionPane.PLAIN_MESSAGE, null, types, types[0]);
         if (type != null) {
-            SwingUtilities.invokeLater(() -> new ElectionGUI(type));
+            new ElectionGUI(type);
         }
     }
 }
