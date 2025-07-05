@@ -10,6 +10,25 @@ abstract class Person{
 
     abstract boolean isEligible();
 }
+class PoliticalParty {
+    String name, symbol;
+
+    PoliticalParty(String name, String symbol) {
+        this.name = name;
+        this.symbol = symbol;
+    }
+}
+
+class PollingStation {
+    int stationNumber;
+    String location;
+
+    PollingStation(int stationNumber, String location) {
+        this.stationNumber = stationNumber;
+        this.location = location;
+    }
+}
+
 
 
 
