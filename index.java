@@ -61,6 +61,32 @@ class Voter extends Person {
         return age >= 18 && age <= 60 && isMentallyStable;
     }
 }
+class ElectionCommission {
+    String head, electionType;
+
+    ElectionCommission(String head, String electionType) {
+        this.head = head;
+        this.electionType = electionType;
+    }
+
+    void showElectionDetails() {
+        System.out.println("Election Type: " + electionType);
+        System.out.println("Election Head: " + head);
+    }
+}
+
+class Complaint {
+    String name, issue;
+
+    Complaint(String name, String issue) {
+        this.name = name;
+        this.issue = issue;
+    }
+
+    void showComplaint() {
+        System.out.println("Complaint from " + name + ": " + issue);
+    }
+}
 
 
 
