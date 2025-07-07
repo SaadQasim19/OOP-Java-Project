@@ -1,3 +1,4 @@
+import java.util.*;
 abstract class Person{
     String name, nationality;
     int age;
@@ -92,9 +93,12 @@ class Complaint {
 
 
 public class index {
-
     public static void main(String[] args) {
+        Scanner keyboard = new Scanner(System.in);
         System.out.println("Election Management System");
-        
+
+        ElectionCommission ec = new ElectionCommission("Election Commission Of Pakistan", "National");
+        ec.showElectionDetails();
+        keyboard.close();
     }
 }
