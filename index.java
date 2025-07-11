@@ -73,6 +73,7 @@ class Candidate extends Person {
     }
 }
 
+
 class Voter extends Person {
     boolean isMentallyStable;
     PollingStation station;
@@ -85,9 +86,27 @@ class Voter extends Person {
 
     @Override
     boolean isEligible() {
+        return canVote();
+    }
+
+    public boolean register() {
+        return canVote();
+    }
+
+    public boolean canVote() {
         return age >= 18 && age <= 60 && isMentallyStable;
     }
 }
+
+class PoliticalParty {
+    String name, symbol;
+
+    PoliticalParty(String name, String symbol) {
+        this.name = name;
+        this.symbol = symbol;
+    }
+}
+
 class ElectionCommission {
     String head, electionType;
 
@@ -156,6 +175,35 @@ public class index {
                 allPeople.add(c);
                 if (c.register()) {
                     System.out.println(name + " is registered.");
+                } else {
+                    System.out.println(name + " is not eligible.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input! Please enter the correct data type.");
+                keyboard.nextLine();
+                i--;
+            }
+        }
+        //* ------------------------------- Voter Registration */
+        for (int i = 0; i <= 2; i++) {
+            System.out.println("\nRegister Voter " + (i + 1));
+            try {
+                System.out.print("Name: ");
+                String name = keyboard.nextLine();
+                System.out.print("Age: ");
+                int age = keyboard.nextInt();
+                keyboard.nextLine();
+                System.out.print("Nationality: ");
+                String nat = keyboard.nextLine();
+                System.out.print("Mentally stable (true/false): ");
+                boolean stable = keyboard.nextBoolean();
+                keyboard.nextLine();
+                PollingStation assignedStation = (i % 2 == 0) ? ps1 : ps2;
+
+                Voter v = new Voter(name, age, nat, stable, assignedStation);
+                allPeople.add(v);
+                if (v.register()) {
+                    System.out.println(name + " is registered at " + assignedStation.location);
                 } else {
                     System.out.println(name + " is not eligible.");
                 }
