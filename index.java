@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 // ^For file handling
@@ -47,7 +49,7 @@ class Candidate extends Person {
             Scanner keyboard = new Scanner(System.in);
             String response = keyboard.nextLine();
             if (response.equalsIgnoreCase("yes")) {
-                hasDualNationality = false; 
+                hasDualNationality = false;
             } else {
                 return false;
             }
@@ -66,7 +68,7 @@ class Candidate extends Person {
     public boolean canVote() {
         return isEligible();
     }
-    
+
 }
 
 class Voter extends Person {
@@ -163,7 +165,7 @@ class ResultDisplay {
             votesCopy[maxIndex] = -1;
         }
     }
-    
+
 }
 
 public class index {
@@ -285,9 +287,46 @@ public class index {
         ResultDisplay resultDisplay = new ResultDisplay(validCandidates, votes);
         resultDisplay.displayResults();
 
-//* -------------------- FILE HANDLING -----------------------------
+        // * -------------------- FILE HANDLING -----------------------------
 
+        try {
+            FileWriter fw = new FileWriter("Candidates.txt");
+            for (Candidate c : validCandidates) {
+                fw.write(c.name + ", " + c.age + ", " + c.nationality + ", " + c.party.name + "\n");
+            }
+            fw.close();
+        } catch (IOException e) {
+            System.out.println("Error writing Candidates.txt");
+        }
 
+        try {
+            FileWriter fw = new FileWriter("Voters.txt");
+            for (Voter v : validVoters) {
+                fw.write(v.name + ", " + v.age + ", " + v.nationality + ", " + v.station.location + "\n");
+            }
+            fw.close();
+        } catch (IOException e) {
+            System.out.println("Error writing Voters.txt");
+        }
+
+        try {
+            FileWriter fw = new FileWriter("Results.txt");
+            int[] votesCopy = votes.clone();
+            for (int i = 0; i < validCandidates.size(); i++) {
+                int maxIndex = 0;
+                for (int j = 0; j < votesCopy.length; j++) {
+                    if (votesCopy[j] > votesCopy[maxIndex]) {
+                        maxIndex = j;
+                    }
+                }
+                Candidate c = validCandidates.get(maxIndex);
+                fw.write(c.name + " (" + c.party.name + "): " + votesCopy[maxIndex] + " votes\n");
+                votesCopy[maxIndex] = -1;
+            }
+            fw.close();
+        } catch (IOException e) {
+            System.out.println("Error writing Results.txt");
+        }
 
         keyboard.close();
     }
