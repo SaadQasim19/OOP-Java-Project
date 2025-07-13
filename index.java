@@ -1,5 +1,12 @@
 import java.util.*;
-abstract class Person{
+
+// ^For file handling
+// import java.io.*;  
+
+abstract class Person {
+
+    // & Encapsulated data members.
+
     String name, nationality;
     int age;
 
@@ -9,31 +16,19 @@ abstract class Person{
         this.nationality = nationality;
     }
 
+    // & Abstract method to be implemented-overriden by subclasses
     abstract boolean isEligible();
 }
-class PoliticalParty {
-    String name, symbol;
 
-    PoliticalParty(String name, String symbol) {
-        this.name = name;
-        this.symbol = symbol;
-    }
-}
-
-class PollingStation {
-    int stationNumber;
-    String location;
-
-    PollingStation(int stationNumber, String location) {
-        this.stationNumber = stationNumber;
-        this.location = location;
-    }
-}
 class Candidate extends Person {
     boolean hasDualNationality, isAhmadi, hasDeclaredAssets;
+
+    // & Composition
     PoliticalParty party;
 
-    Candidate(String name, int age, String nationality, boolean dual, boolean ahmadi, boolean assets, PoliticalParty party) {
+    Candidate(String name, int age, String nationality, boolean dual, boolean ahmadi, boolean assets,
+            PoliticalParty party) {
+        // & Parent Constructor
         super(name, age, nationality);
         hasDualNationality = dual;
         isAhmadi = ahmadi;
@@ -71,8 +66,8 @@ class Candidate extends Person {
     public boolean canVote() {
         return isEligible();
     }
+    
 }
-
 
 class Voter extends Person {
     boolean isMentallyStable;
@@ -121,6 +116,16 @@ class ElectionCommission {
     }
 }
 
+class PollingStation {
+    int stationNumber;
+    String location;
+
+    PollingStation(int stationNumber, String location) {
+        this.stationNumber = stationNumber;
+        this.location = location;
+    }
+}
+
 class Complaint {
     String name, issue;
 
@@ -134,8 +139,32 @@ class Complaint {
     }
 }
 
+class ResultDisplay {
+    ArrayList<Candidate> candidates;
+    int[] votes;
 
+    ResultDisplay(ArrayList<Candidate> candidates, int[] votes) {
+        this.candidates = candidates;
+        this.votes = votes;
+    }
 
+    public void displayResults() {
+        System.out.println("\nElection Results:");
+        int[] votesCopy = votes.clone();
+        for (int i = 0; i < candidates.size(); i++) {
+            int maxIndex = 0;
+            for (int j = 0; j < votesCopy.length; j++) {
+                if (votesCopy[j] > votesCopy[maxIndex]) {
+                    maxIndex = j;
+                }
+            }
+            Candidate c = candidates.get(maxIndex);
+            System.out.println((i + 1) + ". " + c.name + " (" + c.party.name + ") - " + votesCopy[maxIndex] + " votes");
+            votesCopy[maxIndex] = -1;
+        }
+    }
+    
+}
 
 public class index {
     public static void main(String[] args) {
@@ -144,6 +173,7 @@ public class index {
 
         ElectionCommission ec = new ElectionCommission("Election Commission Of Pakistan", "National");
         ec.showElectionDetails();
+
         PoliticalParty p1 = new PoliticalParty("Party A", "Star");
         PoliticalParty p2 = new PoliticalParty("Party B", "Moon");
 
@@ -151,7 +181,7 @@ public class index {
         PollingStation ps2 = new PollingStation(2, "Station 2 - Karachi");
 
         ArrayList<Person> allPeople = new ArrayList<>();
-//* ArrayList to Register Candidate */
+
         for (int i = 0; i <= 2; i++) {
             System.out.println("\nRegister Candidate " + (i + 1));
             try {
@@ -184,7 +214,7 @@ public class index {
                 i--;
             }
         }
-        //* ------------------------------- Voter Registration */
+
         for (int i = 0; i <= 2; i++) {
             System.out.println("\nRegister Voter " + (i + 1));
             try {
@@ -213,6 +243,52 @@ public class index {
                 i--;
             }
         }
+
+        ArrayList<Candidate> validCandidates = new ArrayList<>();
+        ArrayList<Voter> validVoters = new ArrayList<>();
+        for (Person p : allPeople) {
+            if (p instanceof Candidate c && c.isEligible()) {
+                validCandidates.add(c);
+            } else if (p instanceof Voter v && v.canVote()) {
+                validVoters.add(v);
+            }
+        }
+
+        int[] votes = new int[validCandidates.size()];
+        for (Voter voter : validVoters) {
+            System.out.println("\n" + voter.name + ", vote for:");
+            for (int j = 0; j < validCandidates.size(); j++) {
+                System.out.println(
+                        (j + 1) + ". " + validCandidates.get(j).name + " (" + validCandidates.get(j).party.name + ")");
+            }
+            try {
+                int choice = keyboard.nextInt();
+                if (choice > 0 && choice <= validCandidates.size()) {
+                    votes[choice - 1]++;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid vote input. Skipping vote.");
+                keyboard.nextLine();
+            }
+
+            keyboard.nextLine();
+            System.out.print("Do you want to file a complaint? (yes/no): ");
+            String comp = keyboard.nextLine();
+            if (comp.equalsIgnoreCase("yes")) {
+                System.out.print("Enter your complaint: ");
+                String issue = keyboard.nextLine();
+                Complaint complaint = new Complaint(voter.name, issue);
+                complaint.showComplaint();
+            }
+        }
+
+        ResultDisplay resultDisplay = new ResultDisplay(validCandidates, votes);
+        resultDisplay.displayResults();
+
+//* -------------------- FILE HANDLING -----------------------------
+
+
+
         keyboard.close();
     }
 }
