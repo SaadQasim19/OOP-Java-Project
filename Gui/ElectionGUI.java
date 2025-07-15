@@ -2,6 +2,79 @@ package Gui;
 import javax.swing.*;
 import java.awt.*;
 
+interface Registrable {
+    boolean register();
+    String toStoreStringFile();
+}
+
+abstract class Person {
+    String name, nationality;
+    int age;
+    Person(String name, int age, String nationality) {
+        this.name = name;
+        this.age = age;
+        this.nationality = nationality;
+    }
+    abstract boolean isEligible();
+}
+
+class Candidate extends Person implements Registrable {
+    boolean hasDualNationality, isAhmadi, hasDeclaredAssets;
+    PoliticalParty party;
+    Candidate(String name, int age, String nationality, boolean dual, boolean ahmadi, boolean assets, PoliticalParty party) {
+        super(name, age, nationality);
+        this.hasDualNationality = dual;
+        this.isAhmadi = ahmadi;
+        this.hasDeclaredAssets = assets;
+        this.party = party;
+    }
+    public boolean register() {
+        return isEligible();
+    }
+    public boolean isEligible() {
+        return age >= 25 && age <= 40 && nationality.equalsIgnoreCase("pakistani") && !isAhmadi && hasDeclaredAssets;
+    }
+    public String toStoreStringFile() {
+        return "Name: " + name + "\nAge: " + age + "\nNationality: " + nationality + "\nParty: " + party.name;
+    }
+}
+
+class Voter extends Person implements Registrable {
+    boolean isMentallyStable;
+    PollingStation station;
+    Voter(String name, int age, String nationality, boolean stable, PollingStation station) {
+        super(name, age, nationality);
+        this.isMentallyStable = stable;
+        this.station = station;
+    }
+    public boolean register() {
+        return isEligible();
+    }
+    public boolean isEligible() {
+        return age >= 18 && age <= 60 && isMentallyStable;
+    }
+    public String toStoreStringFile() {
+        return "Name: " + name + "\nAge: " + age + "\nNationality: " + nationality + "\nPolling Station: " + station.location;
+    }
+}
+
+class PoliticalParty {
+    String name, symbol;
+    PoliticalParty(String name, String symbol) {
+        this.name = name;
+        this.symbol = symbol;
+    }
+}
+
+class PollingStation {
+    int stationNumber;
+    String location;
+    PollingStation(int num, String loc) {
+        this.stationNumber = num;
+        this.location = loc;
+    }
+}
+
 
 public class ElectionGUI extends JFrame {
     JTextArea resultArea;
