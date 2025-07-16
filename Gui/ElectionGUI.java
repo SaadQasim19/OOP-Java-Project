@@ -80,6 +80,8 @@ class PollingStation {
 
 public class ElectionGUI extends JFrame {
      ArrayList<Candidate> candidates = new ArrayList<>();
+    ArrayList<Voter> voters = new ArrayList<>();
+int [] votes ;
     JTextArea resultArea;
     String electionType;
 
@@ -176,5 +178,66 @@ public void dropCandidate() {
         }
     }
 }
+
+//* ---------------- Register Voter ------- */
+
+public void registerVoter() {
+    try {
+        String name = JOptionPane.showInputDialog("Voter Name:");
+        int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
+        String nationality = JOptionPane.showInputDialog("Nationality:");
+        boolean stable = JOptionPane.showConfirmDialog(null, "Mentally Stable?") == 0;
+
+        String[] stations = { "Station A", "Station B", "Station C" };
+        String station = (String) JOptionPane.showInputDialog(null, "Polling Station:", "Select",
+                JOptionPane.PLAIN_MESSAGE, null, stations, stations[0]);
+
+        PollingStation ps = new PollingStation(new Random().nextInt(1000), station);
+        Voter v = new Voter(name, age, nationality, stable, ps);
+
+        if (v.register()) {
+            voters.add(v);
+            saveToFile("voters.txt", v.toStoreStringFile());
+            JOptionPane.showMessageDialog(null, "Voter Registered.");
+        } else {
+            JOptionPane.showMessageDialog(null, "Not Eligible.");
+        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "Invalid input.");
+    }
+}
+
+//* ------------------------ Votes --------------------------------- */
+
+public void vote() {
+    if (candidates.size() == 0 || voters.size() == 0) {
+        JOptionPane.showMessageDialog(null, "Need candidates and voters.");
+        return;
+    }
+
+    votes = new int[candidates.size()];
+    for (int i = 0; i < voters.size(); i++) {
+        Voter v = voters.get(i);
+        String[] candList = new String[candidates.size()];
+        for (int j = 0; j < candidates.size(); j++) {
+            candList[j] = candidates.get(j).name;
+        }
+
+        int choice = JOptionPane.showOptionDialog(null, v.name + ", cast your vote:", "Vote",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, candList, candList[0]);
+
+        if (choice >= 0) {
+            votes[choice]++;
+        }
+
+        int complaint = JOptionPane.showConfirmDialog(null, "Want to file a complaint?");
+        if (complaint == JOptionPane.YES_OPTION) {
+            String text = JOptionPane.showInputDialog("Enter complaint:");
+            saveToFile("complaints.txt", "From: " + v.name + " | Station: " + v.station.location + " | " + text);
+            JOptionPane.showMessageDialog(null, "Complaint recorded.");
+        }
+    }
+}
+
 }
 
