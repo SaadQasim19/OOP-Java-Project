@@ -1,6 +1,8 @@
 package Gui;
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 interface Registrable {
     boolean register();
@@ -77,6 +79,7 @@ class PollingStation {
 
 
 public class ElectionGUI extends JFrame {
+     ArrayList<Candidate> candidates = new ArrayList<>();
     JTextArea resultArea;
     String electionType;
 
@@ -116,5 +119,62 @@ public class ElectionGUI extends JFrame {
 
         setVisible(true);
     }
+//* ---------------- Register Candidate ------- */
+    public void registerCandidate() {
+        try {
+            String name = JOptionPane.showInputDialog("Candidate Name:");
+            int age = Integer.parseInt(JOptionPane.showInputDialog("Age:"));
+            String nationality = JOptionPane.showInputDialog("Nationality:");
+    
+            int dual = JOptionPane.showConfirmDialog(null, "Has Dual Nationality?");
+            if (dual == JOptionPane.YES_OPTION) {
+                int drop = JOptionPane.showConfirmDialog(null, "Drop second nationality?");
+                if (drop != JOptionPane.YES_OPTION) return;
+            }
+    
+            boolean ahmadi = JOptionPane.showConfirmDialog(null, "Is Ahmadi?") == 0;
+            boolean assets = JOptionPane.showConfirmDialog(null, "Declared Assets?") == 0;
+    
+            String partyName = JOptionPane.showInputDialog("Party Name:");
+            String symbol = JOptionPane.showInputDialog("Party Symbol:");
+            PoliticalParty party = new PoliticalParty(partyName, symbol);
+    
+            Candidate c = new Candidate(name, age, nationality, false, ahmadi, assets, party);
+            if (c.register()) {
+                candidates.add(c);
+                saveToFile("candidates.txt", c.toStoreStringFile());
+                JOptionPane.showMessageDialog(null, "Candidate Registered.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Not Eligible.");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid input.");
+        }
+    }
+//* ---------------- Drop Candidate ------- */
+public void dropCandidate() {
+    if (candidates.isEmpty()) {
+        JOptionPane.showMessageDialog(null, "No candidates.");
+        return;
+    }
+
+    String[] candList = new String[candidates.size()];
+    for (int i = 0; i < candidates.size(); i++) {
+        candList[i] = candidates.get(i).name;
+    }
+
+    String selected = (String) JOptionPane.showInputDialog(null, "Select to drop:", "Drop",
+            JOptionPane.PLAIN_MESSAGE, null, candList, candList[0]);
+
+    if (selected != null) {
+        for (int i = 0; i < candidates.size(); i++) {
+            if (candidates.get(i).name.equals(selected)) {
+                candidates.remove(i);
+                JOptionPane.showMessageDialog(null, "Candidate Dropped.");
+                break;
+            }
+        }
+    }
+}
 }
 
