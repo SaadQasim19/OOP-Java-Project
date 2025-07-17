@@ -1,6 +1,8 @@
 package Gui;
 import javax.swing.*;
 import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -238,6 +240,49 @@ public void vote() {
         }
     }
 }
+//* ----------------------- Result Display ---------------------------- */
 
+public void displayResults() {
+        if (votes == null) {
+            JOptionPane.showMessageDialog(null, "No votes yet.");
+            return;
+        }
+
+        String result = "----- ELECTION RESULTS -----\n";
+
+        int maxVotes = -1;
+        String winner = "";
+
+        for (int i = 0; i < candidates.size(); i++) {
+            Candidate c = candidates.get(i);
+            result += c.name + " (" + c.party.name + ") - " + votes[i] + " votes\n";
+
+            if (votes[i] > maxVotes) {
+                maxVotes = votes[i];
+                winner = c.name;
+            }
+        }
+
+        result += "\nWinner: " + winner + " with " + maxVotes + " votes.";
+        resultArea.setText(result);
+        saveToFile("results.txt", result);
+    }
+
+    void saveToFile(String fileName, String content) {
+        try (FileWriter fw = new FileWriter(fileName, true)) {
+            fw.write(content + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        String[] types = { "National", "Provincial" };
+        String type = (String) JOptionPane.showInputDialog(null, "Select Election Type:", "Setup",
+                JOptionPane.PLAIN_MESSAGE, null, types, types[0]);
+        if (type != null) {
+            new ElectionGUI(type);
+        }
+    }
 }
 
